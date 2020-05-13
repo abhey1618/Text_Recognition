@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import tensorflow as tf
 import os
+from tensorflow.python.util import deprecation
 
 
 class DecoderType:
@@ -28,6 +29,7 @@ class Model:
 		self.decoderType = decoderType
 		self.mustRestore = mustRestore
 		self.snapID = 0
+		deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 		# Whether to use normalization over a batch or a population
 		self.is_train = tf.placeholder(tf.bool, name='is_train')
