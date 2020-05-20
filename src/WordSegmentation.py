@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 
-def wordSegmentation(img, kernelSize=25, sigma=11, theta=7, minArea=0):
+def wordSegmentation(img, kernelSize=25, sigma=11, theta=7, minArea=0, increase_dim = 0):
 	"""Scale space technique for word segmentation proposed by R. Manmatha: http://ciir.cs.umass.edu/pubfiles/mm-27.pdf
 	
 	Args:
@@ -38,6 +38,10 @@ def wordSegmentation(img, kernelSize=25, sigma=11, theta=7, minArea=0):
 		# append bounding box and image of word to result list
 		currBox = cv2.boundingRect(c) # returns (x, y, w, h)
 		(x, y, w, h) = currBox
+		newy = max(y-increase_dim, 0)
+		h = y+h-newy
+		y = newy
+		currBox = (x, y, w, h)
 		currImg = img[y:y+h, x:x+w]
 		res.append((currBox, currImg))
 

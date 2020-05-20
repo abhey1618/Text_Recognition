@@ -4,6 +4,7 @@ from __future__ import print_function
 import sys
 import os
 import json
+from glob import glob as glob
 import argparse
 import cv2
 import editdistance
@@ -11,6 +12,8 @@ from DataLoader import DataLoader, Batch
 from Model import Model, DecoderType
 from SamplePreprocessor import preprocess
 from WordSegmentation import wordSegmentation, prepareImg
+from PDFHandler import convertPDF, deleteTemp
+from linesegm import identify_words
 
 
 class FilePaths:
@@ -20,6 +23,7 @@ class FilePaths:
 	fnTrain = '../data/'
 	fnInfer = '../data/test.png'
 	fnCorpus = '../data/corpus.txt'
+	fnLineData = '../data/lines/'
 
 
 def train(model, loader):
@@ -104,7 +108,7 @@ def LineData(decoderType,dump):
 	"""reads images from data/ and outputs the word-segmentation to out/"""
 
 	# read input images from 'in' directory
-	imgFiles = os.listdir('../data/lines/')
+	imgFiles = os.listdir(FilePaths.fnLineData)
 	if not os.path.exists('../data/out/'):
 		os.mkdir('../data/out')
 	print(open(FilePaths.fnAccuracy).read())
@@ -114,12 +118,16 @@ def LineData(decoderType,dump):
 	for (i,f) in enumerate(imgFiles):
 		#print('Segmenting words of sample %s'%f)
 		file_compo=f.split('.')
+		fname=f
 		f=file_compo[0]
 		extension=file_compo[1]
 		out_dict[f] = []
 		
+		if extension == 'pdf':
+			continue
+
 		# read image, prepare it by resizing it to fixed height and converting it to grayscale
-		img = prepareImg(cv2.imread('../data/lines/%s'%f), 50)
+		img = prepareImg(cv2.imread(FilePaths.fnLineData+fname), 50)
 		
 		# execute segmentation with given parameters
 		# -kernelSize: size of filter kernel (odd integer)
@@ -163,6 +171,7 @@ def main():
 	parser.add_argument('--wordbeamsearch', help='use word beam search instead of best path decoding', action='store_true')
 	parser.add_argument('--dump', help='dump output of NN to CSV file(s)', action='store_true')
 	parser.add_argument('--line', help='the image is of a line', action='store_true')
+	parser.add_argument('--doc', help='the image is of multiple lines', action='store_true')
 
 	args = parser.parse_args()
 
@@ -193,12 +202,30 @@ def main():
 
 	# infer text on test image
 	elif args.line:
+		pdfs = glob(os.path.join(FilePaths.fnLineData, '*.pdf'))
+		convertPDF(pdfs)
 		LineData(decoderType,args.dump)
+		deleteTemp(pdfs)
+
+	elif args.doc:
+		pdfs = glob(os.path.join(FilePaths.fnLineData, '*.pdf'))
+		convertPDF(pdfs)
+		imgFiles = os.listdir(FilePaths.fnLineData)
+		if not os.path.exists('../data/out/'):
+			os.mkdir('../data/out')
+		print(open(FilePaths.fnAccuracy).read())
+		model = Model(open(FilePaths.fnCharList).read(), decoderType, mustRestore=True, dump=args.dump)
+
+		out_dict = identify_words(FilePaths.fnLineData, imgFiles, model)
+		json_object=json.dumps(out_dict, indent=4)
+		with open('../data/out/output.json', "w") as outfile:
+			outfile.write(json_object)
+		deleteTemp(pdfs)
 
 	else:
 		print(open(FilePaths.fnAccuracy).read())
 		model = Model(open(FilePaths.fnCharList).read(), decoderType, mustRestore=True, dump=args.dump)
-		_, _=infer(model, FilePaths.fnInfer)
+		_,_=infer(model, FilePaths.fnInfer)
 
 
 if __name__ == '__main__':
