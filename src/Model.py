@@ -58,9 +58,15 @@ class Model:
 		cnnIn4d = tf.expand_dims(input=self.inputImgs, axis=3)
 
 		# list of parameters for the layers
-		kernelVals = [5, 5, 3, 3, 3]
+		kernelVals = [5, 5, 3, 3, 3, 3, 3]
+		featureVals = [1, 32, 64, 64, 128, 128, 256, 256]
+		strideVals = poolVals = [(2,2), (2,1), (1,2) , (1,2), (1,1), (1,2), (1,2)]
+		'''kernelVals = [5, 5, 3, 3, 3, 3]
+		featureVals = [1, 32, 64, 128, 128, 256, 256]
+		strideVals = poolVals = [(2,2), (2,1), (1,2) , (1,2), (1,2), (1,2)]'''
+		'''kernelVals = [5, 5, 3, 3, 3]
 		featureVals = [1, 32, 64, 128, 128, 256]
-		strideVals = poolVals = [(2,2), (2,2), (1,2), (1,2), (1,2)]
+		strideVals = poolVals = [(2,2), (2,2) , (1,2), (1,2), (1,2)]'''
 		numLayers = len(strideVals)
 
 		# create layers
@@ -73,6 +79,7 @@ class Model:
 			pool = tf.nn.max_pool(relu, (1, poolVals[i][0], poolVals[i][1], 1), (1, strideVals[i][0], strideVals[i][1], 1), 'VALID')
 
 		self.cnnOut4d = pool
+		#print(pool.shape)
 
 
 	def setupRNN(self):
@@ -89,13 +96,16 @@ class Model:
 		# bidirectional RNN
 		# BxTxF -> BxTx2H
 		((fw, bw), _) = tf.nn.bidirectional_dynamic_rnn(cell_fw=stacked, cell_bw=stacked, inputs=rnnIn3d, dtype=rnnIn3d.dtype)
+		#print(fw.shape, bw.shape)
 									
 		# BxTxH + BxTxH -> BxTx2H -> BxTx1X2H
 		concat = tf.expand_dims(tf.concat([fw, bw], 2), 2)
+		#print(concat.shape)
 									
 		# project output to chars (including blank): BxTx1x2H -> BxTx1xC -> BxTxC
 		kernel = tf.Variable(tf.truncated_normal([1, 1, numHidden * 2, len(self.charList) + 1], stddev=0.1))
 		self.rnnOut3d = tf.squeeze(tf.nn.atrous_conv2d(value=concat, filters=kernel, rate=1, padding='SAME'), axis=[2])
+		#print(self.rnnOut3d.shape)
 		
 
 	def setupCTC(self):

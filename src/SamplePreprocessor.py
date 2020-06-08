@@ -18,6 +18,11 @@ def preprocess(img, imgSize, dataAugmentation=False):
 		stretch = (random.random() - 0.5) # -0.5 .. +0.5
 		wStretched = max(int(img.shape[1] * (1 + stretch)), 1) # random width, but at least 1
 		img = cv2.resize(img, (wStretched, img.shape[0])) # stretch horizontally by factor 0.5 .. 1.5
+		angle = (random.random() - 0.5)*10
+		(h, w) = img.shape[:2]
+		center = (w // 2, h // 2)
+		M = cv2.getRotationMatrix2D(center, angle, 1.0)
+		img = cv2.warpAffine(img, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
 	
 	# create target image and copy sample image into it
 	(wt, ht) = imgSize

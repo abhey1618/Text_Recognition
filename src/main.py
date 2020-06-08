@@ -14,6 +14,7 @@ from SamplePreprocessor import preprocess
 from WordSegmentation import wordSegmentation, prepareImg
 from PDFHandler import convertPDF, deleteTemp
 from linesegm import identify_words
+from linesegm_new import line_segment
 
 
 class FilePaths:
@@ -174,6 +175,7 @@ def main():
 	parser.add_argument('--doc', help='the image is of multiple lines', action='store_true')
 
 	args = parser.parse_args()
+	new_segm=True
 
 	decoderType = DecoderType.BestPath
 	if args.beamsearch:
@@ -216,7 +218,10 @@ def main():
 		print(open(FilePaths.fnAccuracy).read())
 		model = Model(open(FilePaths.fnCharList).read(), decoderType, mustRestore=True, dump=args.dump)
 
-		out_dict = identify_words(FilePaths.fnLineData, imgFiles, model)
+		if new_segm:
+			out_dict = line_segment(FilePaths.fnLineData, imgFiles, model)
+		else:
+			out_dict = identify_words(FilePaths.fnLineData, imgFiles, model)
 		json_object=json.dumps(out_dict, indent=4)
 		with open('../data/out/output.json', "w") as outfile:
 			outfile.write(json_object)
