@@ -47,7 +47,7 @@ class Model:
 		self.learningRate = tf.placeholder(tf.float32, shape=[])
 		self.update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS) 
 		with tf.control_dependencies(self.update_ops):
-			self.optimizer = tf.train.RMSPropOptimizer(self.learningRate).minimize(self.loss)
+			self.optimizer = tf.train.AdamOptimizer(self.learningRate).minimize(self.loss)
 
 		# initialize TF
 		(self.sess, self.saver) = self.setupTF()
@@ -58,12 +58,12 @@ class Model:
 		cnnIn4d = tf.expand_dims(input=self.inputImgs, axis=3)
 
 		# list of parameters for the layers
-		kernelVals = [5, 5, 3, 3, 3, 3, 3]
+		'''kernelVals = [5, 5, 3, 3, 3, 3, 3]
 		featureVals = [1, 32, 64, 64, 128, 128, 256, 256]
-		strideVals = poolVals = [(2,2), (2,1), (1,2) , (1,2), (1,1), (1,2), (1,2)]
-		'''kernelVals = [5, 5, 3, 3, 3, 3]
+		strideVals = poolVals = [(2,2), (2,1), (1,2) , (1,2), (1,1), (1,2), (1,2)]'''
+		kernelVals = [5, 5, 3, 3, 3, 3]
 		featureVals = [1, 32, 64, 128, 128, 256, 256]
-		strideVals = poolVals = [(2,2), (2,1), (1,2) , (1,2), (1,2), (1,2)]'''
+		strideVals = poolVals = [(2,2), (2,1), (1,2) , (1,2), (1,2), (1,2)]
 		'''kernelVals = [5, 5, 3, 3, 3]
 		featureVals = [1, 32, 64, 128, 128, 256]
 		strideVals = poolVals = [(2,2), (2,2) , (1,2), (1,2), (1,2)]'''

@@ -1,0 +1,28 @@
+
+7 layer model Adam optimizer
+Character error rate: 23.774510%. Word accuracy: 29.729730%.
+7 layer model beamsearch
+Character error rate: 27.941176%. Word accuracy: 24.324324%.
+7 layer model
+Character error rate: 24.754902%. Word accuracy: 31.081081%.
+6 layer model Adam optimizer
+Character error rate: 29.166667%. Word accuracy: 27.027027%.
+6 layer model
+Character error rate: 24.754902%. Word accuracy: 31.081081%.
+5 layer model
+Character error rate: 33.333333%. Word accuracy: 14.864865%.
+
+
+Using spell checker
+7 layer model Adam optimizer 2
+Character error rate: 18.382353%. Word accuracy: 51.351351%.
+7 layer model Adam optimizer 1
+Character error rate: 18.382353%. Word accuracy: 52.702703%.
+7 layer model
+Character error rate: 22.058824%. Word accuracy: 47.297297%.
+6 layer model Adam optimizer
+Character error rate: 26.470588%. Word accuracy: 47.297297%.
+6 layer model
+Character error rate: 23.529412%. Word accuracy: 50.000000%.
+5 layer model
+Character error rate: 31.862745%. Word accuracy: 31.081081%.

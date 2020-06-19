@@ -3,6 +3,7 @@ import os
 import json
 import numpy as np
 import editdistance
+from spellchecker import SpellChecker
 from linesegm2.LineSegmentation import LineSegmentation
 from Model import Model
 from SamplePreprocessor import preprocess
@@ -14,6 +15,12 @@ def infer(model, fnImg):
 	img = preprocess(cv2.imread(fnImg, cv2.IMREAD_GRAYSCALE), Model.imgSize)
 	batch = Batch(None, [img])
 	(recognized, probability) = model.inferBatch(batch, True)
+	spell = SpellChecker() 
+
+	# find those words that may be misspelled 
+	#misspelled = spell.unknown([recognized]) 
+
+	recognized[0] = spell.correction(recognized[0])
 	#print('Recognized:', '"' + recognized[0] + '"')
 	#print('Probability:', probability[0])
 	return (recognized[0], probability[0])
@@ -23,6 +30,7 @@ def line_segment(filepath, filenames, model):
 	out_dict={}
 	out_path='../data/out/'
 	truth_path='../data/true_text/'
+	compare=False
 
 	if os.path.exists(truth_path+'truth.json'):
 		numCharErr = 0
@@ -72,6 +80,7 @@ def line_segment(filepath, filenames, model):
 				(x, y, w, h) = wordBox
 				imgloc=output_path+'/%d.png'%j
 				# increase contrast
+				# preprocess so that it is similar to IAM dataset
 				kernel = np.ones((2, 2), np.uint8)
 				wordImg = cv2.erode(wordImg, kernel, iterations = 1)
 				cv2.imwrite(imgloc, wordImg) # save word
@@ -94,14 +103,15 @@ def line_segment(filepath, filenames, model):
 				out_dict[f].append(result)
 				n_word+=1
 				#deleting intermediate file
-				#os.remove(imgloc)
+				os.remove(imgloc)
 				cv2.rectangle(img,(x,y),(x+w,y+h),0,1) # draw bounding box in summary image
 			
 			# output summary image with bounding boxes around words
 			cv2.imwrite(output_path+'/summary%d.png'%n_line, img)
 			n_line+=1
 
-	charErrorRate = numCharErr / numCharTotal
-	wordAccuracy = numWordOK / numWordTotal
-	print('Character error rate: %f%%. Word accuracy: %f%%.' % (charErrorRate*100.0, wordAccuracy*100.0))
+	if compare:
+		charErrorRate = numCharErr / numCharTotal
+		wordAccuracy = numWordOK / numWordTotal
+		print('Character error rate: %f%%. Word accuracy: %f%%.' % (charErrorRate*100.0, wordAccuracy*100.0))
 	return out_dict

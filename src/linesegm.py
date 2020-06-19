@@ -70,7 +70,18 @@ def identify_words(filepath, filenames, model):
 		im = cv2.imread(fullpath, 0)
 
 		print('- Thresholding image..')
-		imbw = sauvola.binarize(im, [20, 20], 128, 0.3)
+		#imbw = sauvola.binarize(im, [20, 20], 128, 0.3)
+		pxmin = np.min(im)
+		pxmax = np.max(im)
+		im = (im - pxmin) / (pxmax - pxmin) * 255
+		im = im.astype('uint8')
+		#binarize
+		_ , imbw = cv2.threshold(im, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+		#cv2.imshow('tempb', imbw)
+
+		# increase line width
+		kernel = np.ones((3, 3), np.uint8)
+		imbw = cv2.erode(imbw, kernel, iterations = 1)
 
 		print('- Localizing lines..')
 		lines = linelocalization.localize(imbw)
@@ -87,13 +98,12 @@ def identify_words(filepath, filenames, model):
 			# line = lines[i]
 			rline = imbw[int(prev[1]):int(line),:]
 			img = prepareImg(rline, 50)
-		
 			# execute segmentation with given parameters
 			# -kernelSize: size of filter kernel (odd integer)
 			# -sigma: standard deviation of Gaussian function used for filter kernel
 			# -theta: approximated width/height ratio of words, filter function is distorted by this factor
 			# - minArea: ignore word candidates smaller than specified area
-			res = wordSegmentation(img, kernelSize=25, sigma=11, theta=7, minArea=100)
+			res = wordSegmentation(img, kernelSize=25, sigma=11, theta=7, minArea=100, increase_dim=10)
 			
 			# write output to 'out/inputFileName' directory
 			if not os.path.exists(out_path+'%s'%f):
@@ -105,6 +115,7 @@ def identify_words(filepath, filenames, model):
 				(wordBox, wordImg) = w
 				(x, y, w, h) = wordBox
 				imgloc=out_path+'%s/%d.png'%(f, j)
+				# increase contrast
 				cv2.imwrite(imgloc, wordImg) # save word
 				#FilePaths.fnInfer = 'out/%s/%d.png'%(f,j)
 				try:
@@ -115,7 +126,7 @@ def identify_words(filepath, filenames, model):
 				#updating output dictionary
 				out_dict[f].append(result)
 				#deleting intermediate file
-				os.remove(imgloc)
+				##os.remove(imgloc)
 				cv2.rectangle(img,(x,y),(x+w,y+h),0,1) # draw bounding box in summary image
 			
 			# output summary image with bounding boxes around words
